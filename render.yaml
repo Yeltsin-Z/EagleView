@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: eagles-view-dashboard
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python api_server.py
+    envVars:
+      - key: LINEAR_API_KEY
+        sync: false
+      - key: LINEAR_USER_ID
+        sync: false
+      - key: LINEAR_VIEW_ID
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.13.5

@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle's View - Release Leader Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #e0f2f7 0%, #f5f9fb 25%, #e8f4f8 50%, #f0f7fa 75%, #dbeef5 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 50% 50%; }
+            50% { background-position: 100% 50%; }
+            75% { background-position: 50% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 50px 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+            position: relative;
+            text-align: center;
+        }
+
+        .header:hover {
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .refresh-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #0288d1 0%, #00acc1 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(2, 136, 209, 0.25);
+        }
+
+        .refresh-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 136, 209, 0.35);
+        }
+
+        .refresh-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .refresh-btn.loading {
+            background: linear-gradient(135deg, #4fc3f7 0%, #0288d1 100%);
+        }
+
+        .refresh-icon {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .refresh-btn.loading .refresh-icon {
+            animation: rotate 1s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header h1 .title-text {
+            background: linear-gradient(135deg, #0288d1 0%, #00acc1 50%, #0097a7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header h1 .eagle-icon {
+            font-size: 48px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+            -webkit-text-fill-color: initial;
+            background-clip: initial;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .header p {
+            color: #546e7a;
+            font-size: 18px;
+            font-weight: 400;
+            margin: 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0288d1, #00acc1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card h3 {
+            color: #718096;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            background: linear-gradient(135deg, #37474f 0%, #0288d1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .release-blockers-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(229, 62, 62, 0.15);
+            margin-bottom: 20px;
+            border-left: 5px solid #e53e3e;
+            border: 1px solid rgba(229, 62, 62, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .release-blockers-section:hover {
+            box-shadow: 0 12px 48px rgba(229, 62, 62, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .release-blockers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .release-blockers-header h2 {
+            color: #e53e3e;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .blocker-count {
+            background: linear-gradient(135deg, #e53e3e 0%, #ff6b6b 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 24px;
+            font-size: 18px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .blocker-toggle {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
+        }
+
+        .blocker-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(229, 62, 62, 0.3);
+        }
+
+        .blocker-toggle:active {
+            transform: translateY(0);
+        }
+
+        .blocker-list {
+            display: none;
+        }
+
+        .blocker-list.expanded {
+            display: block;
+        }
+
+        .blocker-item {
+            padding: 18px;
+            border: 2px solid #feb2b2;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blocker-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(229, 62, 62, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .blocker-item:hover {
+            border-color: #fc8181;
+            background: #fed7d7;
+            transform: translateX(4px);
+            box-shadow: 0 4px 16px rgba(229, 62, 62, 0.15);
+        }
+
+        .blocker-item:hover::before {
+            left: 100%;
+        }
+
+        .blocker-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .blocker-item-id {
+            font-weight: 700;
+            color: #e53e3e;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .blocker-item-id:hover {
+            text-decoration: underline;
+        }
+
+        .blocker-item-title {
+            font-size: 16px;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .blocker-item-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #718096;
+            flex-wrap: wrap;
+        }
+
+        .blocker-item-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .no-blockers {
+            text-align: center;
+            padding: 30px;
+            color: #48bb78;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .no-blockers::before {
+            content: "✅ ";
+            font-size: 24px;
+        }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            min-width: 200px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #0288d1;
+            box-shadow: 0 0 0 3px rgba(2, 136, 209, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .filter-group input:hover,
+        .filter-group select:hover {
+            border-color: #cbd5e0;
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+        }
+
+        .table-container:hover {
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        th::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #0288d1, #00acc1);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        th:hover {
+            background: rgba(2, 136, 209, 0.05);
+            color: #0288d1;
+        }
+
+        th:hover::after {
+            transform: scaleX(1);
+        }
+
+        th.sortable::after {
+            content: ' ↕';
+            opacity: 0.3;
+        }
+
+        th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            color: #2d3748;
+            transition: all 0.2s ease;
+        }
+
+        tr {
+            transition: all 0.2s ease;
+        }
+
+        tr:hover {
+            background: linear-gradient(90deg, #f7fafc 0%, #edf2f7 100%);
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .identifier {
+            font-weight: 700;
+            background: linear-gradient(135deg, #0288d1 0%, #00acc1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .identifier::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #0288d1, #00acc1);
+            transition: width 0.3s ease;
+        }
+
+        .identifier:hover::after {
+            width: 100%;
+        }
+
+        .title {
+            max-width: 600px;
+            word-wrap: break-word;
+            white-space: normal;
+            line-height: 1.5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .state-badge {
+            background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+            color: #234e52;
+        }
+
+        .priority-urgent {
+            background: linear-gradient(135deg, #fed7d7 0%, #fc8181 100%);
+            color: #742a2a;
+        }
+
+        .priority-high {
+            background: linear-gradient(135deg, #feebc8 0%, #fbd38d 100%);
+            color: #7c2d12;
+        }
+
+        .priority-medium {
+            background: linear-gradient(135deg, #fefcbf 0%, #faf089 100%);
+            color: #744210;
+        }
+
+        .priority-low {
+            background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+            color: #234e52;
+        }
+
+        .priority-none {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+            color: #4a5568;
+        }
+
+        .labels {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .label {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+            color: #4a5568;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .label:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .label-remove {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .label-remove:hover {
+            opacity: 1;
+            color: #e53e3e;
+        }
+
+        .add-label-btn {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            background: linear-gradient(135deg, #0288d1 0%, #00acc1 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(2, 136, 209, 0.25);
+        }
+
+        .add-label-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(2, 136, 209, 0.35);
+        }
+
+        .add-label-btn:active {
+            transform: translateY(0);
+        }
+
+        .checkbox-cell {
+            width: 40px;
+            text-align: center;
+        }
+
+        .issue-checkbox {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .bulk-actions {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 18px 24px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(2, 136, 209, 0.12);
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid rgba(2, 136, 209, 0.15);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .bulk-actions.show {
+            display: flex;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .bulk-actions-info {
+            color: #2d3748;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .bulk-actions-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bulk-action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .bulk-add-label-btn {
+            background: linear-gradient(135deg, #0288d1 0%, #00acc1 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(2, 136, 209, 0.25);
+        }
+
+        .bulk-add-label-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 136, 209, 0.35);
+        }
+
+        .bulk-clear-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .bulk-clear-btn:hover {
+            background: #cbd5e0;
+            transform: translateY(-2px);
+        }
+
+        .no-results {
+            padding: 40px;
+            text-align: center;
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #718096;
+            font-size: 18px;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 32px;
+            border-radius: 20px;
+            max-width: 520px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #2d3748;
+            font-size: 24px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #718096;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .modal-close:hover {
+            color: #2d3748;
+        }
+
+        .modal-search {
+            margin-bottom: 20px;
+        }
+
+        .modal-search input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .modal-search input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .label-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .label-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .label-option:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .label-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .label-option.disabled:hover {
+            border-color: #e2e8f0;
+            background: white;
+        }
+
+        .label-count {
+            color: #718096;
+            font-size: 13px;
+            margin-bottom: 10px;
+            padding: 0 5px;
+        }
+
+        .quick-labels {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .quick-labels-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quick-labels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 8px;
+        }
+
+        .quick-label-btn {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: linear-gradient(135deg, white 0%, #f7fafc 100%);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: #2d3748;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .quick-label-btn:hover:not(.disabled) {
+            border-color: #0288d1;
+            background: linear-gradient(135deg, #0288d1 0%, #00acc1 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(2, 136, 209, 0.25);
+        }
+
+        .quick-label-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f7fafc;
+        }
+
+        .label-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 12px;
+        }
+
+        .label-name {
+            flex: 1;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px) scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 40px 20px;
+            }
+
+            .header h1 {
+                font-size: 32px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .header h1 .eagle-icon {
+                font-size: 36px;
+            }
+
+            .header p {
+                font-size: 14px;
+                letter-spacing: 1px;
+            }
+
+            .refresh-btn {
+                position: static;
+                margin-top: 20px;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group input,
+            .filter-group select {
+                min-width: 100%;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1><span class="eagle-icon">🦅</span><span class="title-text">Eagle's View</span></h1>
+                <p>Release Leader Dashboard</p>
+            </div>
+            <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
+                <span class="refresh-icon">🔄</span>
+                <span id="refresh-text">Refresh</span>
+            </button>
+        </div>
+
+        <div class="stats-grid" id="stats">
+            <div class="stat-card" style="border-left: 4px solid #e53e3e;">
+                <h3 style="color: #e53e3e;">🚨 Release Blockers</h3>
+                <div class="value" id="stat-blocker-count" style="color: #e53e3e;">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Issues</h3>
+                <div class="value" id="total-count">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Urgent</h3>
+                <div class="value" id="urgent-count">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>High Priority</h3>
+                <div class="value" id="high-count">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>In QA</h3>
+                <div class="value" id="qa-count">-</div>
+            </div>
+        </div>
+
+        <!-- Release Blockers Section -->
+        <div class="release-blockers-section">
+            <div class="release-blockers-header">
+                <h2>
+                    🚨 Release Blockers
+                    <span class="blocker-count" id="blocker-count">0</span>
+                </h2>
+                <button class="blocker-toggle" id="blocker-toggle" onclick="toggleBlockers()">
+                    Show Details
+                </button>
+            </div>
+            <div class="blocker-list" id="blocker-list">
+                <p style="text-align: center; color: #718096;">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Bulk Actions Bar -->
+        <div class="bulk-actions" id="bulk-actions">
+            <div class="bulk-actions-info">
+                <span id="selected-count">0</span> issue<span id="selected-plural">s</span> selected
+            </div>
+            <div class="bulk-actions-buttons">
+                <button class="bulk-action-btn bulk-add-label-btn" onclick="openBulkLabelModal()">
+                    🏷️ Add Label to Selected
+                </button>
+                <button class="bulk-action-btn bulk-clear-btn" onclick="clearSelection()">
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="search">Search</label>
+                <input type="text" id="search" placeholder="Search title or identifier...">
+            </div>
+            <div class="filter-group">
+                <label for="state-filter">State</label>
+                <select id="state-filter">
+                    <option value="">All States</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="priority-filter">Priority</label>
+                <select id="priority-filter">
+                    <option value="">All Priorities</option>
+                </select>
+            </div>
+                <div class="filter-group">
+                    <label for="assignee-filter">Assignee</label>
+                    <select id="assignee-filter">
+                        <option value="">All Assignees</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="verifier-filter">Verifier</label>
+                    <select id="verifier-filter">
+                        <option value="">All Verifiers</option>
+                    </select>
+                </div>
+            </div>
+
+        <div class="table-container">
+            <table id="issues-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" id="select-all" class="issue-checkbox" onchange="toggleSelectAll()" title="Select all">
+                        </th>
+                        <th class="sortable" data-sort="identifier">ID</th>
+                        <th class="sortable" data-sort="title">Title</th>
+                        <th class="sortable" data-sort="state">State</th>
+                        <th class="sortable" data-sort="priority">Priority</th>
+                        <th class="sortable" data-sort="assignee">Assignee</th>
+                        <th>Labels</th>
+                    </tr>
+                </thead>
+                <tbody id="issues-body">
+                    <tr>
+                        <td colspan="7" class="loading">Loading issues...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal for adding labels -->
+    <div id="label-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Label</h2>
+                <button class="modal-close" onclick="closeLabelModal()">&times;</button>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="label-search" placeholder="🔍 Search labels..." oninput="filterLabels()">
+            </div>
+            <div class="quick-labels" id="quick-labels-section">
+                <div class="quick-labels-header">✓ Quick Add Verifiers</div>
+                <div class="quick-labels-grid" id="quick-labels-grid">
+                    <!-- Quick labels will be inserted here -->
+                </div>
+            </div>
+            <div id="label-list" class="label-list">
+                <p style="text-align: center; color: #718096;">Loading labels...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use relative path for API (works both locally and on Render)
+        const API_BASE = `${window.location.protocol}//${window.location.host}/api`;
+        let allIssues = [];
+        let filteredIssues = [];
+        let sortColumn = 'identifier';
+        let sortDirection = 'asc';
+        let availableLabels = [];
+        let currentIssueForLabel = null;
+        let selectedIssues = new Set();
+        
+        // Quick access verifier labels
+        const QUICK_VERIFIER_LABELS = [
+            'verifier-shivi',
+            'verifier-rasika',
+            'verifier-yz',
+            'verifier-mayank',
+            'verifier-dheeraj'
+        ];
+
+        // Helper function to extract verifier name from label
+        function getVerifierNameFromLabel(labelName) {
+            if (labelName && labelName.startsWith('verifier-')) {
+                return labelName.replace('verifier-', '').charAt(0).toUpperCase() + 
+                       labelName.replace('verifier-', '').slice(1);
+            }
+            return null;
+        }
+
+        // Load JSON data
+        async function loadData() {
+            try {
+                // Get the latest JSON filename from the API
+                const filenameResponse = await fetch(`${API_BASE}/latest-json`);
+                
+                if (!filenameResponse.ok) {
+                    throw new Error('Could not find data file. Please click the Refresh button to fetch data from Linear.');
+                }
+                
+                const { filename } = await filenameResponse.json();
+                
+                // Load the data file
+                const dataResponse = await fetch(`/${filename}`);
+                
+                if (!dataResponse.ok) {
+                    throw new Error(`Could not load data file: ${filename}`);
+                }
+
+                allIssues = await dataResponse.json();
+                filteredIssues = [...allIssues];
+                
+                initializeFilters();
+                updateStats();
+                renderTable();
+                renderReleaseBlockers();
+                
+                // Load labels after issues are loaded (so we can get team ID)
+                loadAvailableLabels();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('issues-body').innerHTML = `
+                    <tr><td colspan="7" class="error">
+                        Error loading data: ${error.message}
+                        <br><br>Please click the <strong>🔄 Refresh</strong> button in the top right to fetch data from Linear.
+                    </td></tr>
+                `;
+            }
+        }
+
+        function initializeFilters() {
+            // Get unique values
+            const states = [...new Set(allIssues.map(i => i.state?.name).filter(Boolean))].sort();
+            const priorities = [...new Set(allIssues.map(i => i.priorityLabel).filter(Boolean))].sort();
+            const assignees = [...new Set(allIssues.map(i => i.assignee?.displayName).filter(Boolean))].sort();
+            
+            // Get verifiers from quick verifier labels
+            const verifiers = QUICK_VERIFIER_LABELS.map(label => getVerifierNameFromLabel(label)).sort();
+
+            // Populate state filter
+            const stateFilter = document.getElementById('state-filter');
+            states.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state;
+                option.textContent = state;
+                stateFilter.appendChild(option);
+            });
+
+            // Populate priority filter
+            const priorityFilter = document.getElementById('priority-filter');
+            const priorityOrder = ['Urgent', 'High', 'Medium', 'Low', 'No priority'];
+            priorityOrder.forEach(priority => {
+                if (priorities.includes(priority)) {
+                    const option = document.createElement('option');
+                    option.value = priority;
+                    option.textContent = priority;
+                    priorityFilter.appendChild(option);
+                }
+            });
+
+            // Populate assignee filter
+            const assigneeFilter = document.getElementById('assignee-filter');
+            assignees.forEach(assignee => {
+                const option = document.createElement('option');
+                option.value = assignee;
+                option.textContent = assignee;
+                assigneeFilter.appendChild(option);
+            });
+
+            // Populate verifier filter
+            const verifierFilter = document.getElementById('verifier-filter');
+            verifiers.forEach(verifier => {
+                const option = document.createElement('option');
+                option.value = verifier;
+                option.textContent = verifier;
+                verifierFilter.appendChild(option);
+            });
+
+            // Add event listeners
+            document.getElementById('search').addEventListener('input', applyFilters);
+            document.getElementById('state-filter').addEventListener('change', applyFilters);
+            document.getElementById('priority-filter').addEventListener('change', applyFilters);
+            document.getElementById('assignee-filter').addEventListener('change', applyFilters);
+            document.getElementById('verifier-filter').addEventListener('change', applyFilters);
+
+            // Add sort listeners
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.sort;
+                    if (sortColumn === column) {
+                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortColumn = column;
+                        sortDirection = 'asc';
+                    }
+                    updateSortIndicators();
+                    renderTable();
+                });
+            });
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+                if (th.dataset.sort === sortColumn) {
+                    th.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                }
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const stateFilter = document.getElementById('state-filter').value;
+            const priorityFilter = document.getElementById('priority-filter').value;
+            const assigneeFilter = document.getElementById('assignee-filter').value;
+            const verifierFilter = document.getElementById('verifier-filter').value;
+
+            filteredIssues = allIssues.filter(issue => {
+                const matchesSearch = !searchTerm || 
+                    issue.identifier.toLowerCase().includes(searchTerm) ||
+                    issue.title.toLowerCase().includes(searchTerm);
+                
+                const matchesState = !stateFilter || issue.state?.name === stateFilter;
+                const matchesPriority = !priorityFilter || issue.priorityLabel === priorityFilter;
+                const matchesAssignee = !assigneeFilter || issue.assignee?.displayName === assigneeFilter;
+                
+                // Check if issue has a verifier label matching the filter
+                const matchesVerifier = !verifierFilter || 
+                    (issue.labels && issue.labels.nodes && issue.labels.nodes.some(label => {
+                        const verifierName = getVerifierNameFromLabel(label.name);
+                        return verifierName === verifierFilter;
+                    }));
+
+                return matchesSearch && matchesState && matchesPriority && matchesAssignee && matchesVerifier;
+            });
+
+            updateStats();
+            renderTable();
+        }
+
+        function updateStats() {
+            document.getElementById('total-count').textContent = filteredIssues.length;
+            
+            const urgentCount = filteredIssues.filter(i => i.priorityLabel === 'Urgent').length;
+            document.getElementById('urgent-count').textContent = urgentCount;
+            
+            const highCount = filteredIssues.filter(i => i.priorityLabel === 'High').length;
+            document.getElementById('high-count').textContent = highCount;
+            
+            const qaCount = filteredIssues.filter(i => i.state?.name === 'In QA Verification').length;
+            document.getElementById('qa-count').textContent = qaCount;
+        }
+
+        function sortIssues(issues) {
+            return [...issues].sort((a, b) => {
+                let aVal, bVal;
+
+                switch (sortColumn) {
+                    case 'identifier':
+                        aVal = a.identifier || '';
+                        bVal = b.identifier || '';
+                        break;
+                    case 'title':
+                        aVal = a.title || '';
+                        bVal = b.title || '';
+                        break;
+                    case 'state':
+                        aVal = a.state?.name || '';
+                        bVal = b.state?.name || '';
+                        break;
+                    case 'priority':
+                        const priorityMap = { 'Urgent': 4, 'High': 3, 'Medium': 2, 'Low': 1, 'No priority': 0 };
+                        aVal = priorityMap[a.priorityLabel] || 0;
+                        bVal = priorityMap[b.priorityLabel] || 0;
+                        break;
+                    case 'assignee':
+                        aVal = a.assignee?.displayName || '';
+                        bVal = b.assignee?.displayName || '';
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('issues-body');
+            
+            if (filteredIssues.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-results">No issues found matching your filters.</td></tr>';
+                return;
+            }
+
+            const sortedIssues = sortIssues(filteredIssues);
+
+            tbody.innerHTML = sortedIssues.map(issue => {
+                const stateName = issue.state?.name || 'Unknown';
+                const priority = issue.priorityLabel || 'No priority';
+                const priorityClass = priority.toLowerCase().replace(' ', '-');
+                const assignee = issue.assignee?.displayName || 'Unassigned';
+                const labels = issue.labels?.nodes || [];
+
+                const labelsHtml = labels.map(label => `
+                    <span class="label">
+                        ${label.name}
+                        <span class="label-remove" onclick="event.stopPropagation(); removeLabel('${issue.id}', '${label.id}', '${label.name}')" title="Remove label">×</span>
+                    </span>
+                `).join('');
+                
+                const isChecked = selectedIssues.has(issue.id);
+                
+                return `
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" class="issue-checkbox" 
+                                   data-issue-id="${issue.id}" 
+                                   ${isChecked ? 'checked' : ''}
+                                   onchange="toggleIssueSelection('${issue.id}')">
+                        </td>
+                        <td><a href="${issue.url}" target="_blank" class="identifier">${issue.identifier}</a></td>
+                        <td class="title" title="${issue.title}">${issue.title}</td>
+                        <td><span class="badge state-badge">${stateName}</span></td>
+                        <td><span class="badge priority-${priorityClass}">${priority}</span></td>
+                        <td>${assignee}</td>
+                        <td>
+                            <div class="labels">
+                                ${labelsHtml}
+                                <button class="add-label-btn" onclick="event.stopPropagation(); openLabelModal(${JSON.stringify(issue).replace(/"/g, '&quot;')})" title="Add label">+ Add</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Label Management Functions
+        async function loadAvailableLabels() {
+            try {
+                // Get ENG team ID from issues
+                let teamId = null;
+                const engTeam = allIssues.find(issue => issue.team?.key === 'ENG')?.team;
+                
+                if (engTeam) {
+                    teamId = engTeam.id;
+                    console.log(`Fetching labels for team: ${engTeam.name} (${engTeam.key})`);
+                }
+                
+                const response = await fetch(`${API_BASE}/available-labels`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ teamId: teamId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.team && data.team.labels) {
+                    availableLabels = data.team.labels.nodes;
+                    console.log(`Loaded ${availableLabels.length} labels from ENG team`);
+                } else if (data.viewer && data.viewer.organization) {
+                    availableLabels = data.viewer.organization.labels.nodes;
+                    console.log(`Loaded ${availableLabels.length} labels from organization`);
+                }
+            } catch (error) {
+                console.error('Error loading available labels:', error);
+                showNotification('Failed to load available labels', 'error');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Refresh data function
+        async function refreshData() {
+            const btn = document.getElementById('refresh-btn');
+            const btnText = document.getElementById('refresh-text');
+            
+            // Disable button and show loading state
+            btn.disabled = true;
+            btn.classList.add('loading');
+            btnText.textContent = 'Fetching...';
+            
+            try {
+                // Call API to run the fetch script
+                const response = await fetch(`${API_BASE}/refresh-data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    btnText.textContent = 'Reloading...';
+                    // Wait a moment for the file to be written
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // Reload the data
+                    await loadData();
+                    showNotification('Data refreshed successfully!', 'success');
+                } else {
+                    showNotification(`Refresh failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Refresh error:', error);
+                showNotification(`Refresh failed: ${error.message}`, 'error');
+            } finally {
+                // Reset button state
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                btnText.textContent = 'Refresh';
+            }
+        }
+
+        async function removeLabel(issueId, labelId, labelName) {
+            try {
+                const response = await fetch(`${API_BASE}/remove-label`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ issueId, labelId })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && (result.issueRemoveLabel?.success)) {
+                    // Update the issue in our local data
+                    const issue = allIssues.find(i => i.id === issueId);
+                    if (issue && result.issueRemoveLabel.issue) {
+                        issue.labels = result.issueRemoveLabel.issue.labels;
+                    }
+                    
+                    renderTable();
+                    renderReleaseBlockers();
+                    showNotification(`Removed label: ${labelName}`, 'success');
+                } else {
+                    throw new Error(result.error || 'Failed to remove label');
+                }
+            } catch (error) {
+                console.error('Error removing label:', error);
+                showNotification(`Failed to remove label: ${error.message}`, 'error');
+            }
+        }
+
+        async function addLabel(issueId, labelId, labelName) {
+            try {
+                const response = await fetch(`${API_BASE}/add-label`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ issueId, labelId })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && (result.issueAddLabel?.success)) {
+                    // Update the issue in our local data
+                    const issue = allIssues.find(i => i.id === issueId);
+                    if (issue && result.issueAddLabel.issue) {
+                        issue.labels = result.issueAddLabel.issue.labels;
+                        // Update current issue for label if modal is still open
+                        if (currentIssueForLabel && currentIssueForLabel.id === issueId) {
+                            currentIssueForLabel.labels = result.issueAddLabel.issue.labels;
+                            // Re-render both quick labels and label options to show updated state
+                            renderQuickLabels();
+                            const searchTerm = document.getElementById('label-search').value;
+                            renderLabelOptions(searchTerm);
+                        }
+                    }
+                    
+                    renderTable();
+                    renderReleaseBlockers();
+                    showNotification(`Added label: ${labelName}`, 'success');
+                } else {
+                    throw new Error(result.error || 'Failed to add label');
+                }
+            } catch (error) {
+                console.error('Error adding label:', error);
+                showNotification(`Failed to add label: ${error.message}`, 'error');
+            }
+        }
+
+        function renderQuickLabels() {
+            if (!currentIssueForLabel) return;
+            
+            const quickLabelsGrid = document.getElementById('quick-labels-grid');
+            const quickLabelsSection = document.getElementById('quick-labels-section');
+            const currentLabelNames = (currentIssueForLabel.labels?.nodes || []).map(l => l.name.toLowerCase());
+            
+            // Find quick labels in available labels
+            const quickLabels = QUICK_VERIFIER_LABELS.map(name => {
+                const label = availableLabels.find(l => l.name.toLowerCase() === name.toLowerCase());
+                return label ? { ...label, quickName: name } : null;
+            }).filter(Boolean);
+            
+            // Hide section if no quick labels are available
+            if (quickLabels.length === 0) {
+                quickLabelsSection.style.display = 'none';
+                return;
+            }
+            
+            quickLabelsSection.style.display = 'block';
+            
+            quickLabelsGrid.innerHTML = quickLabels.map(label => {
+                const hasLabel = currentLabelNames.includes(label.name.toLowerCase());
+                const displayName = label.quickName.replace('verifier-', '');
+                return `
+                    <button class="quick-label-btn ${hasLabel ? 'disabled' : ''}" 
+                            ${hasLabel ? 'disabled' : ''}
+                            onclick="${hasLabel ? '' : `addLabel('${currentIssueForLabel.id}', '${label.id}', '${label.name}')`}">
+                        ${displayName}
+                        ${hasLabel ? '✓' : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderLabelOptions(searchTerm = '') {
+            if (!currentIssueForLabel) return;
+            
+            const labelList = document.getElementById('label-list');
+            const currentLabelIds = (currentIssueForLabel.labels?.nodes || []).map(l => l.id);
+            
+            // Filter labels based on search term
+            const filteredLabels = availableLabels.filter(label => 
+                label.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            
+            if (filteredLabels.length === 0) {
+                labelList.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px;">No labels found matching "' + searchTerm + '"</p>';
+                return;
+            }
+            
+            // Count how many are available vs already added
+            const availableCount = filteredLabels.filter(l => !currentLabelIds.includes(l.id)).length;
+            const countText = searchTerm 
+                ? `Found ${filteredLabels.length} label${filteredLabels.length !== 1 ? 's' : ''} (${availableCount} available)`
+                : `${availableLabels.length} total label${availableLabels.length !== 1 ? 's' : ''} (${availableCount} available)`;
+            
+            // Render filtered labels with count
+            labelList.innerHTML = `
+                <div class="label-count">${countText}</div>
+                ${filteredLabels.map(label => {
+                    const hasLabel = currentLabelIds.includes(label.id);
+                    return `
+                        <div class="label-option ${hasLabel ? 'disabled' : ''}" 
+                             onclick="${hasLabel ? '' : `addLabel('${currentIssueForLabel.id}', '${label.id}', '${label.name}')`}">
+                            <div class="label-color" style="background-color: ${label.color}"></div>
+                            <span class="label-name">${label.name}</span>
+                            ${hasLabel ? '<span style="color: #718096; font-size: 12px;">Already added</span>' : ''}
+                        </div>
+                    `;
+                }).join('')}
+            `;
+        }
+
+        function filterLabels() {
+            const searchTerm = document.getElementById('label-search').value;
+            renderLabelOptions(searchTerm);
+        }
+
+        function openLabelModal(issue) {
+            currentIssueForLabel = issue;
+            const modal = document.getElementById('label-modal');
+            const searchInput = document.getElementById('label-search');
+            
+            // Clear search input
+            searchInput.value = '';
+            
+            // Render quick labels and all available labels
+            renderQuickLabels();
+            renderLabelOptions();
+            
+            modal.classList.add('show');
+            
+            // Focus on search input
+            setTimeout(() => searchInput.focus(), 100);
+        }
+
+        function closeLabelModal() {
+            const modal = document.getElementById('label-modal');
+            modal.classList.remove('show');
+            currentIssueForLabel = null;
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('label-modal');
+            if (event.target === modal) {
+                closeLabelModal();
+            }
+        };
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('label-modal');
+                if (modal.classList.contains('show')) {
+                    closeLabelModal();
+                }
+            }
+        });
+
+        // Release Blockers Functions
+        function getReleaseBlockers() {
+            return allIssues.filter(issue => {
+                const labels = issue.labels?.nodes || [];
+                return labels.some(label => 
+                    label.name.toLowerCase().includes('release blocker') ||
+                    label.name.toLowerCase().includes('blocker')
+                );
+            });
+        }
+
+        function renderReleaseBlockers() {
+            const blockers = getReleaseBlockers();
+            const blockerList = document.getElementById('blocker-list');
+            const blockerCount = document.getElementById('blocker-count');
+            const statBlockerCount = document.getElementById('stat-blocker-count');
+            
+            blockerCount.textContent = blockers.length;
+            if (statBlockerCount) {
+                statBlockerCount.textContent = blockers.length;
+            }
+            
+            if (blockers.length === 0) {
+                blockerList.innerHTML = '<div class="no-blockers">No Release Blockers! 🎉</div>';
+                return;
+            }
+            
+            blockerList.innerHTML = blockers.map(issue => {
+                const assignee = issue.assignee?.displayName || 'Unassigned';
+                const state = issue.state?.name || 'Unknown';
+                const priority = issue.priorityLabel || 'No priority';
+                
+                return `
+                    <div class="blocker-item">
+                        <div class="blocker-item-header">
+                            <a href="${issue.url}" target="_blank" class="blocker-item-id">${issue.identifier}</a>
+                            <span class="badge priority-${priority.toLowerCase().replace(' ', '-')}">${priority}</span>
+                        </div>
+                        <div class="blocker-item-title">${issue.title}</div>
+                        <div class="blocker-item-meta">
+                            <span>📊 <strong>State:</strong> ${state}</span>
+                            <span>👤 <strong>Assignee:</strong> ${assignee}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleBlockers() {
+            const blockerList = document.getElementById('blocker-list');
+            const toggleBtn = document.getElementById('blocker-toggle');
+            
+            if (blockerList.classList.contains('expanded')) {
+                blockerList.classList.remove('expanded');
+                toggleBtn.textContent = 'Show Details';
+            } else {
+                blockerList.classList.add('expanded');
+                toggleBtn.textContent = 'Hide Details';
+            }
+        }
+
+        // Bulk Selection Functions
+        function toggleIssueSelection(issueId) {
+            if (selectedIssues.has(issueId)) {
+                selectedIssues.delete(issueId);
+            } else {
+                selectedIssues.add(issueId);
+            }
+            updateBulkActionsBar();
+            updateSelectAllCheckbox();
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const isChecked = selectAllCheckbox.checked;
+            
+            if (isChecked) {
+                // Select all filtered issues
+                filteredIssues.forEach(issue => selectedIssues.add(issue.id));
+            } else {
+                // Clear selection
+                selectedIssues.clear();
+            }
+            
+            updateBulkActionsBar();
+            renderTable();
+        }
+
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const filteredIds = filteredIssues.map(i => i.id);
+            const selectedFilteredCount = filteredIds.filter(id => selectedIssues.has(id)).length;
+            
+            selectAllCheckbox.checked = selectedFilteredCount === filteredIssues.length && filteredIssues.length > 0;
+            selectAllCheckbox.indeterminate = selectedFilteredCount > 0 && selectedFilteredCount < filteredIssues.length;
+        }
+
+        function updateBulkActionsBar() {
+            const bulkActions = document.getElementById('bulk-actions');
+            const selectedCount = document.getElementById('selected-count');
+            const selectedPlural = document.getElementById('selected-plural');
+            
+            selectedCount.textContent = selectedIssues.size;
+            selectedPlural.textContent = selectedIssues.size === 1 ? '' : 's';
+            
+            if (selectedIssues.size > 0) {
+                bulkActions.classList.add('show');
+            } else {
+                bulkActions.classList.remove('show');
+            }
+        }
+
+        function clearSelection() {
+            selectedIssues.clear();
+            updateBulkActionsBar();
+            updateSelectAllCheckbox();
+            renderTable();
+        }
+
+        function openBulkLabelModal() {
+            if (selectedIssues.size === 0) return;
+            
+            // Create a virtual issue object for bulk operations
+            currentIssueForLabel = {
+                id: 'bulk',
+                identifier: `${selectedIssues.size} issues`,
+                title: 'Bulk Label Operation',
+                labels: { nodes: [] },
+                isBulk: true,
+                selectedIds: Array.from(selectedIssues)
+            };
+            
+            const modal = document.getElementById('label-modal');
+            const searchInput = document.getElementById('label-search');
+            const modalHeader = modal.querySelector('.modal-header h2');
+            
+            // Update modal title
+            modalHeader.textContent = `Add Label to ${selectedIssues.size} Issue${selectedIssues.size > 1 ? 's' : ''}`;
+            
+            // Clear search input
+            searchInput.value = '';
+            
+            // Render quick labels and all available labels
+            renderQuickLabels();
+            renderLabelOptions();
+            
+            modal.classList.add('show');
+            
+            // Focus on search input
+            setTimeout(() => searchInput.focus(), 100);
+        }
+
+        // Override addLabel to handle bulk operations
+        const originalAddLabel = addLabel;
+        addLabel = async function(issueId, labelId, labelName) {
+            // Check if this is a bulk operation
+            if (currentIssueForLabel && currentIssueForLabel.isBulk) {
+                const selectedIds = currentIssueForLabel.selectedIds;
+                let successCount = 0;
+                let failCount = 0;
+                
+                showNotification(`Adding label "${labelName}" to ${selectedIds.length} issues...`, 'success');
+                
+                // Add label to each selected issue
+                for (const id of selectedIds) {
+                    try {
+                        const response = await fetch(`${API_BASE}/add-label`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ issueId: id, labelId: labelId })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok && result.issueAddLabel?.success) {
+                            successCount++;
+                            // Update the issue in our local data
+                            const issue = allIssues.find(i => i.id === id);
+                            if (issue && result.issueAddLabel.issue) {
+                                issue.labels = result.issueAddLabel.issue.labels;
+                            }
+                        } else {
+                            failCount++;
+                        }
+                    } catch (error) {
+                        console.error(`Error adding label to issue ${id}:`, error);
+                        failCount++;
+                    }
+                }
+                
+                renderTable();
+                renderReleaseBlockers();
+                
+                if (failCount === 0) {
+                    showNotification(`✅ Successfully added "${labelName}" to ${successCount} issue${successCount > 1 ? 's' : ''}`, 'success');
+                } else {
+                    showNotification(`⚠️ Added "${labelName}" to ${successCount} issue${successCount > 1 ? 's' : ''}, ${failCount} failed`, 'error');
+                }
+            } else {
+                // Single issue operation
+                return originalAddLabel(issueId, labelId, labelName);
+            }
+        };
+
+        // Override closeLabelModal to reset title
+        const originalCloseLabelModal = closeLabelModal;
+        closeLabelModal = function() {
+            const modal = document.getElementById('label-modal');
+            const modalHeader = modal.querySelector('.modal-header h2');
+            modalHeader.textContent = 'Add Label';
+            originalCloseLabelModal();
+        };
+
+        // Initialize on page load
+        loadData();
+    </script>
+</body>
+</html>
