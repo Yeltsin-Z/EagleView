@@ -1297,6 +1297,13 @@
 
             // Populate verifier filter
             const verifierFilter = document.getElementById('verifier-filter');
+            
+            // Add "Unassigned" option
+            const unassignedOption = document.createElement('option');
+            unassignedOption.value = 'Unassigned';
+            unassignedOption.textContent = 'Unassigned';
+            verifierFilter.appendChild(unassignedOption);
+            
             verifiers.forEach(verifier => {
                 const option = document.createElement('option');
                 option.value = verifier;
@@ -1353,11 +1360,21 @@
                 const matchesAssignee = !assigneeFilter || issue.assignee?.displayName === assigneeFilter;
                 
                 // Check if issue has a verifier label matching the filter
-                const matchesVerifier = !verifierFilter || 
-                    (issue.labels && issue.labels.nodes && issue.labels.nodes.some(label => {
-                        const verifierName = getVerifierNameFromLabel(label.name);
-                        return verifierName === verifierFilter;
-                    }));
+                let matchesVerifier = true;
+                if (verifierFilter) {
+                    if (verifierFilter === 'Unassigned') {
+                        // Show issues without any verifier labels
+                        matchesVerifier = !(issue.labels && issue.labels.nodes && issue.labels.nodes.some(label => 
+                            label.name && label.name.startsWith('verifier-')
+                        ));
+                    } else {
+                        // Show issues with the specific verifier
+                        matchesVerifier = issue.labels && issue.labels.nodes && issue.labels.nodes.some(label => {
+                            const verifierName = getVerifierNameFromLabel(label.name);
+                            return verifierName === verifierFilter;
+                        });
+                    }
+                }
 
                 return matchesSearch && matchesState && matchesPriority && matchesAssignee && matchesVerifier;
             });
