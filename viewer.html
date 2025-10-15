@@ -1197,6 +1197,7 @@
         let availableLabels = [];
         let currentIssueForLabel = null;
         let selectedIssues = new Set();
+        let listenersInitialized = false;
         
         // Quick access verifier labels
         const QUICK_VERIFIER_LABELS = [
@@ -1267,6 +1268,10 @@
 
             // Populate state filter
             const stateFilter = document.getElementById('state-filter');
+            // Clear existing options except the first "All" option
+            while (stateFilter.options.length > 1) {
+                stateFilter.remove(1);
+            }
             states.forEach(state => {
                 const option = document.createElement('option');
                 option.value = state;
@@ -1276,6 +1281,10 @@
 
             // Populate priority filter
             const priorityFilter = document.getElementById('priority-filter');
+            // Clear existing options except the first "All" option
+            while (priorityFilter.options.length > 1) {
+                priorityFilter.remove(1);
+            }
             const priorityOrder = ['Urgent', 'High', 'Medium', 'Low', 'No priority'];
             priorityOrder.forEach(priority => {
                 if (priorities.includes(priority)) {
@@ -1288,6 +1297,10 @@
 
             // Populate assignee filter
             const assigneeFilter = document.getElementById('assignee-filter');
+            // Clear existing options except the first "All" option
+            while (assigneeFilter.options.length > 1) {
+                assigneeFilter.remove(1);
+            }
             assignees.forEach(assignee => {
                 const option = document.createElement('option');
                 option.value = assignee;
@@ -1297,6 +1310,10 @@
 
             // Populate verifier filter
             const verifierFilter = document.getElementById('verifier-filter');
+            // Clear existing options except the first "All" option
+            while (verifierFilter.options.length > 1) {
+                verifierFilter.remove(1);
+            }
             
             // Add "Unassigned" option
             const unassignedOption = document.createElement('option');
@@ -1311,27 +1328,31 @@
                 verifierFilter.appendChild(option);
             });
 
-            // Add event listeners
-            document.getElementById('search').addEventListener('input', applyFilters);
-            document.getElementById('state-filter').addEventListener('change', applyFilters);
-            document.getElementById('priority-filter').addEventListener('change', applyFilters);
-            document.getElementById('assignee-filter').addEventListener('change', applyFilters);
-            document.getElementById('verifier-filter').addEventListener('change', applyFilters);
+            // Add event listeners (only once)
+            if (!listenersInitialized) {
+                document.getElementById('search').addEventListener('input', applyFilters);
+                document.getElementById('state-filter').addEventListener('change', applyFilters);
+                document.getElementById('priority-filter').addEventListener('change', applyFilters);
+                document.getElementById('assignee-filter').addEventListener('change', applyFilters);
+                document.getElementById('verifier-filter').addEventListener('change', applyFilters);
 
-            // Add sort listeners
-            document.querySelectorAll('th.sortable').forEach(th => {
-                th.addEventListener('click', () => {
-                    const column = th.dataset.sort;
-                    if (sortColumn === column) {
-                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-                    } else {
-                        sortColumn = column;
-                        sortDirection = 'asc';
-                    }
-                    updateSortIndicators();
-                    renderTable();
+                // Add sort listeners
+                document.querySelectorAll('th.sortable').forEach(th => {
+                    th.addEventListener('click', () => {
+                        const column = th.dataset.sort;
+                        if (sortColumn === column) {
+                            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            sortColumn = column;
+                            sortDirection = 'asc';
+                        }
+                        updateSortIndicators();
+                        renderTable();
+                    });
                 });
-            });
+                
+                listenersInitialized = true;
+            }
         }
 
         function updateSortIndicators() {
