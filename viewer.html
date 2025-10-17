@@ -1787,15 +1787,16 @@
                     label.name.toLowerCase().includes('blocker')
                 );
                 
-                // Check if issue is in Open, In-Progress, or In-Review state
+                // Exclude only truly completed/done/canceled states
                 const state = issue.state?.name || '';
-                const isActiveState = state === 'Open' || 
-                                     state === 'In Progress' || 
-                                     state === 'In-Progress' ||
-                                     state === 'In Review' ||
-                                     state === 'In-Review';
+                const stateLower = state.toLowerCase();
+                const isExcludedState = stateLower.includes('done') || 
+                                       stateLower.includes('canceled') ||
+                                       stateLower.includes('cancelled') ||
+                                       stateLower === 'completed';
                 
-                return hasBlockerLabel && isActiveState;
+                // Show blockers that have the label and are NOT in excluded states
+                return hasBlockerLabel && !isExcludedState;
             });
         }
 
