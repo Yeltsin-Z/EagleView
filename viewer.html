@@ -1787,16 +1787,13 @@
                     label.name.toLowerCase().includes('blocker')
                 );
                 
-                // Exclude only truly completed/done/canceled states
+                // Only show blockers in active work states: Todo, In Progress, In Review
                 const state = issue.state?.name || '';
-                const stateLower = state.toLowerCase();
-                const isExcludedState = stateLower.includes('done') || 
-                                       stateLower.includes('canceled') ||
-                                       stateLower.includes('cancelled') ||
-                                       stateLower === 'completed';
+                const isActiveState = state === 'Todo' || 
+                                     state === 'In Progress' || 
+                                     state === 'In Review';
                 
-                // Show blockers that have the label and are NOT in excluded states
-                return hasBlockerLabel && !isExcludedState;
+                return hasBlockerLabel && isActiveState;
             });
         }
 
