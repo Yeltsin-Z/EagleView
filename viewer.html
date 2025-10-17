@@ -1780,11 +1780,22 @@
         // Release Blockers Functions
         function getReleaseBlockers() {
             return allIssues.filter(issue => {
+                // Check if issue has release blocker label
                 const labels = issue.labels?.nodes || [];
-                return labels.some(label => 
+                const hasBlockerLabel = labels.some(label => 
                     label.name.toLowerCase().includes('release blocker') ||
                     label.name.toLowerCase().includes('blocker')
                 );
+                
+                // Check if issue is in Open, In-Progress, or In-Review state
+                const state = issue.state?.name || '';
+                const isActiveState = state === 'Open' || 
+                                     state === 'In Progress' || 
+                                     state === 'In-Progress' ||
+                                     state === 'In Review' ||
+                                     state === 'In-Review';
+                
+                return hasBlockerLabel && isActiveState;
             });
         }
 
