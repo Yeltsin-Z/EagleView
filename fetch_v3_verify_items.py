@@ -3,9 +3,8 @@
 Eagle's View - Release Leader Dashboard
 Data Fetcher for Linear Issues
 
-Script to fetch all items from a Linear view
-View: Preprod V3 Verification
-URL: https://linear.app/drivetrain/view/preprod-v3-verification-153db179a33a
+Script to fetch all issues with 'Release Blocker' label from Linear
+Fetches from team: ENG (Engineering)
 """
 
 import os
@@ -232,6 +231,139 @@ class LinearViewFetcher:
         
         return all_issues
     
+    def get_issues_by_label(self, label_name: str, team_key: str = "ENG", max_issues: int = 1000) -> List[Dict[str, Any]]:
+        """Fetch all issues with a specific label"""
+        
+        print(f"Fetching issues with label: {label_name}")
+        
+        # Fetch issues with pagination
+        all_issues = []
+        has_next_page = True
+        end_cursor = None
+        
+        while has_next_page:
+            query = """
+            query GetIssuesByLabel($first: Int!, $after: String, $labelName: String!, $teamKey: String!) {
+              issues(
+                first: $first
+                after: $after
+                filter: {
+                  labels: { name: { eq: $labelName } }
+                  team: { key: { eq: $teamKey } }
+                }
+              ) {
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+                nodes {
+                    id
+                    identifier
+                    title
+                    description
+                    url
+                    number
+                    state {
+                      id
+                      name
+                      type
+                      color
+                    }
+                    priority
+                    priorityLabel
+                    estimate
+                    dueDate
+                    createdAt
+                    updatedAt
+                    completedAt
+                    canceledAt
+                    archivedAt
+                    labels {
+                      nodes {
+                        id
+                        name
+                        color
+                      }
+                    }
+                    team {
+                      id
+                      name
+                      key
+                    }
+                    project {
+                      id
+                      name
+                    }
+                    cycle {
+                      id
+                      name
+                      number
+                    }
+                    assignee {
+                      id
+                      name
+                      email
+                      displayName
+                    }
+                    creator {
+                      id
+                      name
+                      email
+                    }
+                    subscribers {
+                      nodes {
+                        id
+                        name
+                        email
+                        displayName
+                      }
+                    }
+                    parent {
+                      id
+                      identifier
+                      title
+                    }
+                    children {
+                      nodes {
+                        id
+                        identifier
+                        title
+                      }
+                    }
+                  }
+                }
+              }
+            """
+            
+            variables = {
+                'teamKey': team_key,
+                'labelName': label_name,
+                'first': min(100, max_issues - len(all_issues)),
+                'after': end_cursor
+            }
+            
+            try:
+                result = self._make_request(query, variables)
+                issues_data = result.get('data', {}).get('issues', {})
+                
+                nodes = issues_data.get('nodes', [])
+                all_issues.extend(nodes)
+                
+                page_info = issues_data.get('pageInfo', {})
+                has_next_page = page_info.get('hasNextPage', False) and len(all_issues) < max_issues
+                end_cursor = page_info.get('endCursor')
+                
+                print(f"Fetched {len(nodes)} issues (total: {len(all_issues)})")
+                
+                if not has_next_page:
+                    break
+                    
+            except Exception as e:
+                print(f"Error fetching issues: {e}")
+                break
+        
+        return all_issues
+    
     def export_to_json(self, issues: List[Dict[str, Any]], filename: str = None):
         """Export issues to JSON file"""
         if filename is None:
@@ -334,26 +466,27 @@ class LinearViewFetcher:
 
 
 def main():
-    """Main function to fetch and export Linear view items"""
+    """Main function to fetch and export Linear issues with Release Blocker label"""
     
-    # View ID from the URL or environment variable
-    VIEW_ID = os.getenv('LINEAR_VIEW_ID', "153db179a33a")
+    # Configuration
+    LABEL_NAME = os.getenv('LINEAR_LABEL', "Release Blocker")
+    TEAM_KEY = os.getenv('LINEAR_TEAM_KEY', "ENG")
     
     print("🦅 Eagle's View - Release Leader Dashboard")
     print("="*80)
-    print(f"View ID: {VIEW_ID}")
-    print(f"View URL: https://linear.app/drivetrain/view/preprod-v3-verification-{VIEW_ID}")
+    print(f"Fetching all issues with label: {LABEL_NAME}")
+    print(f"Team: {TEAM_KEY}")
     print("="*80 + "\n")
     
     try:
         # Initialize the fetcher
         fetcher = LinearViewFetcher()
         
-        # Fetch issues from the view
-        issues = fetcher.get_issues_from_view(VIEW_ID)
+        # Fetch issues by label
+        issues = fetcher.get_issues_by_label(LABEL_NAME, TEAM_KEY)
         
         if not issues:
-            print("No issues found in the view")
+            print(f"No issues found with label '{LABEL_NAME}' in team '{TEAM_KEY}'")
             return
         
         # Print summary
