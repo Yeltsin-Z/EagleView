@@ -4,8 +4,8 @@ Eagle's View - Release Leader Dashboard
 Data Fetcher for Linear Issues
 
 This script fetches issues from two sources and merges them:
-1. Preprod-v3 verification view (for main table)
-2. All issues with 'Release Blocker' label (for release blocker tracking)
+1. Issues with 'preprod-v3' label (excluding 'launched' items) - for main table
+2. All issues with 'Release Blocker' label - for release blocker tracking
 """
 
 import os
@@ -470,41 +470,53 @@ def main():
     """Main function to fetch and export Linear issues"""
     
     # Configuration
-    VIEW_ID = os.getenv('LINEAR_VIEW_ID', "153db179a33a")  # Preprod-v3 view
-    LABEL_NAME = os.getenv('LINEAR_LABEL', "Release Blocker")
     TEAM_KEY = os.getenv('LINEAR_TEAM_KEY', "ENG")
     
     print("🦅 Eagle's View - Release Leader Dashboard")
     print("="*80)
     print(f"Fetching issues from two sources:")
-    print(f"1. Preprod-v3 View ID: {VIEW_ID}")
-    print(f"2. Release Blockers with label: {LABEL_NAME}")
+    print(f"1. Items with 'preprod-v3' label (excluding 'launched' items)")
+    print(f"2. Release Blockers with 'Release Blocker' label")
     print("="*80 + "\n")
     
     try:
         # Initialize the fetcher
         fetcher = LinearViewFetcher()
         
-        # Fetch issues from preprod-v3 view
-        print("📋 Fetching from Preprod-v3 view...")
-        view_issues = fetcher.get_issues_from_view(VIEW_ID)
-        print(f"Found {len(view_issues)} issues from view\n")
+        # Fetch preprod-v3 issues
+        print("📋 Fetching preprod-v3 items...")
+        preprod_issues = fetcher.get_issues_by_label("preprod-v3", TEAM_KEY)
+        print(f"Found {len(preprod_issues)} preprod-v3 issues\n")
+        
+        # Filter out issues with "launched" label
+        preprod_issues_filtered = [
+            issue for issue in preprod_issues
+            if not any(label['name'].lower() == 'launched' 
+                      for label in issue.get('labels', {}).get('nodes', []))
+        ]
+        print(f"After removing 'launched' items: {len(preprod_issues_filtered)} issues\n")
         
         # Fetch release blocker issues
         print("🚨 Fetching Release Blockers...")
-        blocker_issues = fetcher.get_issues_by_label(LABEL_NAME, TEAM_KEY)
+        blocker_issues = fetcher.get_issues_by_label("Release Blocker", TEAM_KEY)
         print(f"Found {len(blocker_issues)} release blocker issues\n")
         
         # Merge issues (remove duplicates by ID)
         issues_dict = {}
-        for issue in view_issues + blocker_issues:
+        for issue in preprod_issues_filtered + blocker_issues:
             issues_dict[issue['id']] = issue
         
-        all_issues = list(issues_dict.values())
+        # Final filter: remove any items with "launched" label
+        all_issues = [
+            issue for issue in issues_dict.values()
+            if not any(label['name'].lower() == 'launched' 
+                      for label in issue.get('labels', {}).get('nodes', []))
+        ]
+        
         print(f"📊 Total unique issues: {len(all_issues)}")
-        print(f"   - From view: {len(view_issues)}")
+        print(f"   - Preprod-v3 (not launched): {len(preprod_issues_filtered)}")
         print(f"   - Release blockers: {len(blocker_issues)}")
-        print(f"   - Combined (deduplicated): {len(all_issues)}\n")
+        print(f"   - Combined & filtered (no launched): {len(all_issues)}\n")
         
         if not all_issues:
             print("No issues found")
