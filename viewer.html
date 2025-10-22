@@ -1398,7 +1398,11 @@
                     }
                 }
 
-                return matchesSearch && matchesState && matchesPriority && matchesAssignee && matchesVerifier;
+                // Exclude Todo and In Review states from main table (but keep them in data for Release Blockers)
+                const state = issue.state?.name || '';
+                const isExcludedFromTable = state === 'Todo' || state === 'In Review';
+
+                return matchesSearch && matchesState && matchesPriority && matchesAssignee && matchesVerifier && !isExcludedFromTable;
             });
 
             updateStats();
