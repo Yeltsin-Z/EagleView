@@ -506,17 +506,18 @@ def main():
         for issue in preprod_issues_filtered + blocker_issues:
             issues_dict[issue['id']] = issue
         
-        # Final filter: remove any items with "launched" label
+        # Final filter: remove any items with "launched" label or in "Done"/"Canceled" state
         all_issues = [
             issue for issue in issues_dict.values()
             if not any(label['name'].lower() == 'launched' 
                       for label in issue.get('labels', {}).get('nodes', []))
+            and issue.get('state', {}).get('name', '').lower() not in ['done', 'canceled']
         ]
         
         print(f"📊 Total unique issues: {len(all_issues)}")
         print(f"   - Preprod-v3 (not launched): {len(preprod_issues_filtered)}")
         print(f"   - Release blockers: {len(blocker_issues)}")
-        print(f"   - Combined & filtered (no launched): {len(all_issues)}\n")
+        print(f"   - Combined & filtered (no launched, no done/canceled): {len(all_issues)}\n")
         
         if not all_issues:
             print("No issues found")
