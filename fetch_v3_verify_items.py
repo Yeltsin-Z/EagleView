@@ -474,9 +474,8 @@ def main():
     
     print("🦅 Eagle's View - Release Leader Dashboard")
     print("="*80)
-    print(f"Fetching issues from two sources:")
-    print(f"1. Items with 'preprod-v3' label (excluding 'launched' items)")
-    print(f"2. Release Blockers with 'Release Blocker' label")
+    print(f"Fetching preprod-v3 items for verification")
+    print(f"Filters: No 'launched' tag, Only 'In QA Verification' & 'In Dev Verification' states")
     print("="*80 + "\n")
     
     try:
@@ -488,38 +487,18 @@ def main():
         preprod_issues = fetcher.get_issues_by_label("preprod-v3", TEAM_KEY)
         print(f"Found {len(preprod_issues)} preprod-v3 issues\n")
         
-        # Filter out issues with "launched" label
-        preprod_issues_filtered = [
+        # Filter: Remove 'launched' items and keep only verification states
+        verification_states = ['in qa verification', 'in dev verification']
+        all_issues = [
             issue for issue in preprod_issues
             if not any(label['name'].lower() == 'launched' 
                       for label in issue.get('labels', {}).get('nodes', []))
-        ]
-        print(f"After removing 'launched' items: {len(preprod_issues_filtered)} issues\n")
-        
-        # Fetch release blocker issues
-        print("🚨 Fetching Release Blockers...")
-        blocker_issues = fetcher.get_issues_by_label("Release Blocker", TEAM_KEY)
-        print(f"Found {len(blocker_issues)} release blocker issues\n")
-        
-        # Merge issues (remove duplicates by ID)
-        issues_dict = {}
-        for issue in preprod_issues_filtered + blocker_issues:
-            issues_dict[issue['id']] = issue
-        
-        # Final filter: remove any items with "launched" label or in Done/Canceled states
-        # Keep Todo/In Review for release blocker tracking (main table will filter display)
-        excluded_states = ['done', 'canceled']
-        all_issues = [
-            issue for issue in issues_dict.values()
-            if not any(label['name'].lower() == 'launched' 
-                      for label in issue.get('labels', {}).get('nodes', []))
-            and issue.get('state', {}).get('name', '').lower() not in excluded_states
+            and issue.get('state', {}).get('name', '').lower() in verification_states
         ]
         
-        print(f"📊 Total unique issues: {len(all_issues)}")
-        print(f"   - Preprod-v3 (not launched): {len(preprod_issues_filtered)}")
-        print(f"   - Release blockers: {len(blocker_issues)}")
-        print(f"   - Combined & filtered (no launched/done/canceled): {len(all_issues)}\n")
+        print(f"📊 Filtered issues: {len(all_issues)}")
+        print(f"   - Total preprod-v3: {len(preprod_issues)}")
+        print(f"   - After filters (no launched, only QA/Dev verification): {len(all_issues)}\n")
         
         if not all_issues:
             print("No issues found")

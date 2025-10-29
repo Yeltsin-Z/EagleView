@@ -1398,11 +1398,7 @@
                     }
                 }
 
-                // Exclude Todo and In Review states from main table (but keep them in data for Release Blockers)
-                const state = issue.state?.name || '';
-                const isExcludedFromTable = state === 'Todo' || state === 'In Review';
-
-                return matchesSearch && matchesState && matchesPriority && matchesAssignee && matchesVerifier && !isExcludedFromTable;
+                return matchesSearch && matchesState && matchesPriority && matchesAssignee && matchesVerifier;
             });
 
             updateStats();
@@ -1791,13 +1787,12 @@
                     label.name.toLowerCase().includes('blocker')
                 );
                 
-                // Only show blockers in active work states: Todo, In Progress, In Review
+                // Show blockers in verification states (since we only fetch QA/Dev Verification items)
                 const state = issue.state?.name || '';
-                const isActiveState = state === 'Todo' || 
-                                     state === 'In Progress' || 
-                                     state === 'In Review';
+                const isVerificationState = state === 'In QA Verification' || 
+                                           state === 'In Dev Verification';
                 
-                return hasBlockerLabel && isActiveState;
+                return hasBlockerLabel && isVerificationState;
             });
         }
 
