@@ -474,7 +474,9 @@ def main():
     
     print("🦅 Eagle's View - Release Leader Dashboard")
     print("="*80)
-    print(f"Fetching preprod-v3 items")
+    print(f"Fetching issues from two sources:")
+    print(f"1. Items with 'preprod-v3' label")
+    print(f"2. Items with 'Release Blocker' label")
     print(f"Filter: Exclude 'launched' tag")
     print(f"Main Table: Show only 'In QA Verification' & 'In Dev Verification' states")
     print(f"Release Blockers: Show items with 'Release Blocker' label (excluding QA/Dev Verification)")
@@ -489,15 +491,28 @@ def main():
         preprod_issues = fetcher.get_issues_by_label("preprod-v3", TEAM_KEY)
         print(f"Found {len(preprod_issues)} preprod-v3 issues\n")
         
+        # Fetch Release Blocker issues
+        print("🚨 Fetching Release Blocker items...")
+        blocker_issues = fetcher.get_issues_by_label("Release Blocker", TEAM_KEY)
+        print(f"Found {len(blocker_issues)} release blocker issues\n")
+        
+        # Merge issues (remove duplicates by ID)
+        print("🔀 Merging and deduplicating...")
+        issues_dict = {}
+        for issue in preprod_issues + blocker_issues:
+            issues_dict[issue['id']] = issue
+        
         # Filter: Remove 'launched' items only (keep all states for release blocker tracking)
         all_issues = [
-            issue for issue in preprod_issues
+            issue for issue in issues_dict.values()
             if not any(label['name'].lower() == 'launched' 
                       for label in issue.get('labels', {}).get('nodes', []))
         ]
         
         print(f"📊 Filtered issues: {len(all_issues)}")
-        print(f"   - Total preprod-v3: {len(preprod_issues)}")
+        print(f"   - Preprod-v3: {len(preprod_issues)}")
+        print(f"   - Release Blockers: {len(blocker_issues)}")
+        print(f"   - Unique combined: {len(issues_dict)}")
         print(f"   - After removing 'launched' items: {len(all_issues)}\n")
         
         if not all_issues:
