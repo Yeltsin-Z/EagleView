@@ -474,8 +474,10 @@ def main():
     
     print("🦅 Eagle's View - Release Leader Dashboard")
     print("="*80)
-    print(f"Fetching preprod-v3 items for verification")
-    print(f"Filters: No 'launched' tag, Only 'In QA Verification' & 'In Dev Verification' states")
+    print(f"Fetching preprod-v3 items")
+    print(f"Filter: Exclude 'launched' tag")
+    print(f"Main Table: Show only 'In QA Verification' & 'In Dev Verification' states")
+    print(f"Release Blockers: Show items with 'Release Blocker' label (excluding QA/Dev Verification)")
     print("="*80 + "\n")
     
     try:
@@ -487,18 +489,16 @@ def main():
         preprod_issues = fetcher.get_issues_by_label("preprod-v3", TEAM_KEY)
         print(f"Found {len(preprod_issues)} preprod-v3 issues\n")
         
-        # Filter: Remove 'launched' items and keep only verification states
-        verification_states = ['in qa verification', 'in dev verification']
+        # Filter: Remove 'launched' items only (keep all states for release blocker tracking)
         all_issues = [
             issue for issue in preprod_issues
             if not any(label['name'].lower() == 'launched' 
                       for label in issue.get('labels', {}).get('nodes', []))
-            and issue.get('state', {}).get('name', '').lower() in verification_states
         ]
         
         print(f"📊 Filtered issues: {len(all_issues)}")
         print(f"   - Total preprod-v3: {len(preprod_issues)}")
-        print(f"   - After filters (no launched, only QA/Dev verification): {len(all_issues)}\n")
+        print(f"   - After removing 'launched' items: {len(all_issues)}\n")
         
         if not all_issues:
             print("No issues found")

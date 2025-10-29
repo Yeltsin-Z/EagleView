@@ -1398,7 +1398,11 @@
                     }
                 }
 
-                return matchesSearch && matchesState && matchesPriority && matchesAssignee && matchesVerifier;
+                // Main table shows only QA Verification and Dev Verification states
+                const state = issue.state?.name || '';
+                const isVerificationState = state === 'In QA Verification' || state === 'In Dev Verification';
+
+                return matchesSearch && matchesState && matchesPriority && matchesAssignee && matchesVerifier && isVerificationState;
             });
 
             updateStats();
@@ -1787,12 +1791,14 @@
                     label.name.toLowerCase().includes('blocker')
                 );
                 
-                // Show blockers in verification states (since we only fetch QA/Dev Verification items)
+                // EXCLUDE items in QA/Dev Verification (already being verified) and Done/Canceled (completed)
                 const state = issue.state?.name || '';
-                const isVerificationState = state === 'In QA Verification' || 
-                                           state === 'In Dev Verification';
+                const isActiveBlocker = state !== 'In QA Verification' && 
+                                       state !== 'In Dev Verification' &&
+                                       state !== 'Done' &&
+                                       state !== 'Canceled';
                 
-                return hasBlockerLabel && isVerificationState;
+                return hasBlockerLabel && isActiveBlocker;
             });
         }
 
